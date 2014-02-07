@@ -26,27 +26,24 @@ public class VK_Auth {
 	 */
 	public static Map<String, String> auth(String login, String pass)
 			throws Exception {
-		try {
-			String url = "";
-			Connection.Response connection = null;
-			// Get authorization URL
-			connection = Jsoup.connect(defaultURL).execute();
-			Document doc = connection.parse();
-			Element form = doc.getElementsByTag("form").get(0);
-			url = form.attr("action");
-			// Sending authorization data
-			Map<String, String> data = new HashMap<String, String>();
-			data.put("email", login);
-			data.put("pass", pass);
-			connection = Jsoup.connect(url).data(data).execute();
-			// Retrieve cookies
-			Map<String, String> cookies = connection.cookies();
-			if (cookies.containsKey("p"))
-				return cookies;
-			else
-				throw new IllegalArgumentException("Bad login or password");
-		} catch (Exception exception) {
-			throw exception;
+		String url = "";
+		Connection.Response connection = null;
+		// Get authorization URL
+		connection = Jsoup.connect(defaultURL).execute();
+		Document doc = connection.parse();
+		Element form = doc.getElementsByTag("form").get(0);
+		url = form.attr("action");
+		// Sending authorization data
+		Map<String, String> data = new HashMap<String, String>();
+		data.put("email", login);
+		data.put("pass", pass);
+		connection = Jsoup.connect(url).data(data).execute();
+		// Retrieve cookies
+		Map<String, String> cookies = connection.cookies();
+		if (cookies.containsKey("p")) {
+			return cookies;
+		} else {
+			throw new IllegalArgumentException("Bad login or password");
 		}
 	}
 }
