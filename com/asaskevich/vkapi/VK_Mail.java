@@ -21,15 +21,20 @@ public class VK_Mail {
 	private final int extraID = 2000000000;
 	private Map<String, String> cookies;
 	private List<VK_Dialog> list;
+	private List<VK_Message> loadedDialog;
+	private VK_Friends friends;
 
 	/**
 	 * Create new instance of class
 	 * @param cookies authorization tokens, that was received by
 	 *            {@link VK_Auth.auth}
+	 * @throws Exception
 	 */
-	public VK_Mail(Map<String, String> cookies) {
+	public VK_Mail(Map<String, String> cookies) throws Exception {
 		this.cookies = cookies;
 		this.list = new ArrayList<VK_Dialog>();
+		this.loadedDialog = new ArrayList<VK_Message>();
+		this.friends = new VK_Friends(cookies);
 	}
 
 	/**
@@ -40,15 +45,13 @@ public class VK_Mail {
 	 */
 	public void sendMessage(int dialogId, String message) throws IOException {
 		Connection.Response connection = null;
-		connection = Jsoup.connect("https://m.vk.com/write" + dialogId)
-				.cookies(cookies).execute();
+		connection = Jsoup.connect("https://m.vk.com/write" + dialogId).cookies(cookies).execute();
 		Document document = connection.parse();
 		Element form = document.select("#write_form").get(0);
 		String url = form.attr("action");
 		Map<String, String> data = new HashMap<String, String>();
 		data.put("message", message);
-		connection = Jsoup.connect("https://m.vk.com" + url).data(data)
-				.cookies(cookies).execute();
+		connection = Jsoup.connect("https://m.vk.com" + url).data(data).cookies(cookies).execute();
 	}
 
 	/**
@@ -59,8 +62,7 @@ public class VK_Mail {
 	 */
 	private int getDialogs(int offset) throws Exception {
 		Connection.Response connection = null;
-		connection = Jsoup.connect(defaultURL + "?offset=" + offset)
-				.cookies(cookies).execute();
+		connection = Jsoup.connect(defaultURL + "?offset=" + offset).cookies(cookies).execute();
 		Document document = connection.parse();
 		Elements items = document.select(".dialog_item");
 		if (items.size() == 0) {
@@ -74,8 +76,7 @@ public class VK_Mail {
 			Element date = next.select(".di_date").get(0);
 			Element message = next.select(".di_text").get(0);
 			Element author = next.select(".mi_author").get(0);
-			VK_ChatType type = next.attr("href").contains("chat") ? VK_ChatType.CHAT
-					: VK_ChatType.DIALOG;
+			VK_ChatType type = next.attr("href").contains("chat") ? VK_ChatType.CHAT : VK_ChatType.DIALOG;
 			String lastTime = date.text();
 			String url = next.attr("href");
 			String lastMessage = message.text();
@@ -85,19 +86,57 @@ public class VK_Mail {
 				int id = extraID + Integer.valueOf(strId);
 				Element chat_user = next.select(".di_chat_user").get(0);
 				String user_name = chat_user.text();
-				VK_Dialog dialog = new VK_Dialog(id, lastMessage, lastTime,
-						chat_name, user_name, isUnreaded, isInbox, isOutbox);
+				VK_Dialog dialog = new VK_Dialog(id, lastMessage, lastTime, chat_name, user_name, isUnreaded, isInbox, isOutbox);
 				list.add(dialog);
 			} else {
 				String strId = url.substring(url.indexOf("peer=") + 5);
 				int id = Integer.valueOf(strId);
 				String user_name = author.text();
-				VK_Dialog dialog = new VK_Dialog(id, lastMessage, lastTime,
-						user_name, isUnreaded, isInbox, isOutbox);
+				VK_Dialog dialog = new VK_Dialog(id, lastMessage, lastTime, user_name, isUnreaded, isInbox, isOutbox);
 				list.add(dialog);
 			}
 		}
 		return size;
+	}
+
+	/**
+	 * Skip {@code countToSkip} messages and load dialog messages
+	 * @param dialogID ID of dialog retrieving from {@code VK_Mail.getDialogs()}
+	 * @param countToSkip count of skipped messages
+	 * @return list of messages with 20 or less elements
+	 * @throws Exception
+	 */
+	public List<VK_Message> loadDialog(int dialogID, int countToSkip) throws Exception {
+		loadedDialog.clear();
+		String type = dialogID > extraID ? "chat" : "peer";
+		if (dialogID > extraID) {
+			dialogID -= extraID;
+		}
+		Connection.Response connection = null;
+		connection = Jsoup.connect(defaultURL + "?act=show&" + type + "=" + dialogID + "&offset=" + countToSkip).cookies(cookies).execute();
+		Document document = connection.parse();
+		Elements msgs = document.select(".msg_item");
+		for (Element next : msgs) {
+			String message = next.select(".mi_text").text();
+			String user = next.select(".mi_author").get(0).attr("data-name");
+			String time = next.select(".mi_date").text();
+			boolean isUnread = next.attr("class").contains("mi_unread");
+			//TODO edit this
+			int userID = friends.findUserByName(user);
+			VK_Message msg = new VK_Message(message, user, userID, time, isUnread);
+			loadedDialog.add(msg);
+		}
+		return loadedDialog;
+	}
+
+	/**
+	 * Load last 20 messages from dialog
+	 * @param dialogID ID of dialog
+	 * @return list of messages
+	 * @throws Exception
+	 */
+	public List<VK_Message> loadDialog(int dialogID) throws Exception {
+		return loadDialog(dialogID, 0);
 	}
 
 	/**
@@ -133,9 +172,7 @@ public class VK_Mail {
 	 * @throws Exception
 	 */
 	public List<VK_Dialog> getDialogs() throws Exception {
-		if (list == null || list.size() == 0) {
-			getAllDialogs();
-		}
+		getAllDialogs();
 		return list;
 	}
 }

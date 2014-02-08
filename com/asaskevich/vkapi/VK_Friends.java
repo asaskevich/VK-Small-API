@@ -49,10 +49,8 @@ public class VK_Friends {
 	 */
 	private void getTabCounters() {
 		Elements tabs = loadedDocument.select(".tab_item .tab_counter");
-		friendsCount = tabs.size() > 0 ? Integer.valueOf(tabs.get(0).text())
-				: 0;
-		onlineFriendsCount = tabs.size() > 1 ? Integer.valueOf(tabs.get(1)
-				.text()) : 0;
+		friendsCount = tabs.size() > 0 ? Integer.valueOf(tabs.get(0).text()) : 0;
+		onlineFriendsCount = tabs.size() > 1 ? Integer.valueOf(tabs.get(1).text()) : 0;
 	}
 
 	/**
@@ -64,8 +62,7 @@ public class VK_Friends {
 	private void getFriendList(int offset) throws Exception {
 		// Load page with custom offset, usually retrieve next 20 friends
 		Connection.Response connection = null;
-		connection = Jsoup.connect(defaultURL + "?offset=" + offset)
-				.cookies(cookies).execute();
+		connection = Jsoup.connect(defaultURL + "?offset=" + offset).cookies(cookies).execute();
 		Document document = connection.parse();
 		Elements list = document.select(".simple_fit_item");
 		// User has no friends :(
@@ -84,12 +81,10 @@ public class VK_Friends {
 			int idUser = Integer.valueOf(id.attr("href").substring(6));
 			// TODO edit this
 			// User status - on-line or off-line
-			VK_Status statusUser = status.size() == 0 ? VK_Status.OFFLINE
-					: (status.get(0).attr("class").contains("mlvi") ? VK_Status.ONLINE_MOBILE
-							: VK_Status.ONLINE);
+			VK_Status statusUser = status.size() == 0 ? VK_Status.OFFLINE : (status.get(0).attr("class").contains("mlvi") ? VK_Status.ONLINE_MOBILE
+					: VK_Status.ONLINE);
 			// Creating new object and adding it on list
-			VK_Friend nextFriend = new VK_Friend(idUser, name, photoURL,
-					statusUser);
+			VK_Friend nextFriend = new VK_Friend(idUser, name, photoURL, statusUser);
 			friends.add(nextFriend);
 		}
 	}
@@ -140,5 +135,18 @@ public class VK_Friends {
 			getAllFriends();
 		}
 		return friends;
+	}
+
+	public int findUserByName(String user) throws Exception {
+		// List empty or not initialized
+		if (friends == null || friends.size() == 0) {
+			getAllFriends();
+		}
+		for (VK_Friend next : friends) {
+			if (next.getName().equals(user)) {
+				return next.getId();
+			}
+		}
+		return -1;
 	}
 }

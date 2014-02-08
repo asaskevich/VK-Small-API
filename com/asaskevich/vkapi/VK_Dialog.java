@@ -25,9 +25,7 @@ public class VK_Dialog {
 	 * @param isInbox is last message inbox
 	 * @param isOutbox is last message outbox
 	 */
-	public VK_Dialog(int id, String lastMessage, String lastTime,
-			String userName, boolean isUnreaded, boolean isInbox,
-			boolean isOutbox) {
+	public VK_Dialog(int id, String lastMessage, String lastTime, String userName, boolean isUnreaded, boolean isInbox, boolean isOutbox) {
 		this.type = VK_ChatType.DIALOG;
 		this.id = id;
 		this.lastMessage = lastMessage;
@@ -49,14 +47,13 @@ public class VK_Dialog {
 	 * @param isInbox is last message inbox
 	 * @param isOutbox is last message outbox
 	 */
-	public VK_Dialog(int id, String lastMessage, String lastTime,
-			String chatName, String userName, boolean isUnreaded,
-			boolean isInbox, boolean isOutbox) {
+	public VK_Dialog(int id, String lastMessage, String lastTime, String chatName, String userName, boolean isUnreaded, boolean isInbox,
+			boolean isOutbox) {
 		this(id, lastMessage, lastTime, userName, isUnreaded, isInbox, isOutbox);
 		this.type = VK_ChatType.CHAT;
 		this.chatName = chatName;
 	}
-	
+
 	/**
 	 * @return id of dialog
 	 */
@@ -86,7 +83,7 @@ public class VK_Dialog {
 	}
 
 	/**
-	 * @return if it chat then chat name, else null 
+	 * @return if it chat then chat name, else null
 	 */
 	public String getChatName() {
 		return chatName;
@@ -105,7 +102,7 @@ public class VK_Dialog {
 	public boolean isUnreaded() {
 		return isUnreaded;
 	}
-	
+
 	/**
 	 * @return true if last unreaded message is inbox
 	 */
