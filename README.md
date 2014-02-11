@@ -13,3 +13,5 @@ Completed:
 * Loading basic data about friends - id, name, photo
 * Status of some friend - on-line or off-line
 * Send private message to chat or user
+* Load list of dialogs
+* Load list of groups
